@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /*jshint esversion: 6 */
 const program = require('commander');
-const ngrok = require('ngrok');
 const chalk = require('chalk');
 const preferences = require('node-persist');
 const os = require('os');
@@ -136,38 +135,14 @@ program
       });
     }
 
-    // Start the ngrok tunnel to the webserver
-    let tunnelURL;
-
-    try {
-      const port = prefs.assets_web ? prefs.assets_port : prefs.jekyll_port;
-      let options = { addr: port, region: 'ap' };
-
-      if (prefs.ngrok_token && prefs.ngrok_token !== "") {
-        options.authtoken = prefs.ngrok_token;
-      }
-
-      if (prefs.private_web) {
-        options.auth = `${prefs.web_username}:${prefs.web_password}`
-      }
-
-      tunnelURL = await ngrok.connect(options);
-
-    } catch (error) {
-      sendEvent(LibrarianEvents.ServerError);
-      log(JSON.stringify(error));
-      fatalError("\nFailed to start the ngrok tunnel.\nPlease make sure your ngRok token is valid.");
-    }
-
-    if (tunnelURL == undefined || tunnelURL === '') {
-      fatalError('Failed to start the ngrok tunnel.')
-    }
-
-    prefs.currentURL = tunnelURL;
+    
 
     const currentIP = os.networkInterfaces().en0.find(elm => elm.family == 'IPv4').address;
+    let tunnelURL = 'http://' + currentIP + ':' + prefs.jekyll_port;
+
+    prefs.currentURL = tunnelURL;
     if (currentIP !== prefs.local_ip) {
-      prefs.local_ip = 'http://' + currentIP + ':' + prefs.jekyll_port;
+      prefs.local_ip = tunnelURL;
     }
 
     await preferences.setItem(configurationKey, prefs);
