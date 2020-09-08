@@ -6,7 +6,6 @@ const preferences = require('node-persist');
 const os = require('os');
 const fs = require('fs-extra');
 const plist = require('plist');
-const qrcode = require('qrcode-terminal');
 const log = console.log;
 const home = os.homedir();
 const updateNotifier = require('update-notifier');
@@ -54,8 +53,6 @@ program
     } else {
       await beginSetup(preferences);
     }
-
-    await checkForUpdate(preferences);
   });
 
 program
@@ -157,11 +154,6 @@ program
 
     log('\nLibrarian is up at: ');
     log(chalk.yellow.bold(webURL));
-
-    log('\nScan the QR code to jump to Librarian\'s web interface:');
-    qrcode.generate(webURL);
-
-    await checkForUpdate(preferences);
   });
 
 
@@ -272,7 +264,6 @@ program
 
     await addBuild(preferences, buildInfo);
     printHeader("Build Added Successfully!")
-    await checkForUpdate(preferences);
     process.exit(0);
   });
 
@@ -357,22 +348,6 @@ const installBundle = async (path) => {
       }
     });
   });
-}
-
-const checkForUpdate = async (preferences) => {
-  const notifier = updateNotifier({ pkg });
-  notifier.notify();
-  if (notifier.update) {
-    const configuration = {
-      "update": {
-        "available": true,
-        "notes": `An Update to Librarian is available! The new version is ${notifier.update.latest} (You have ${notifier.update.current})`
-      }
-    }
-    await setWebConfiguration(preferences, configuration);
-  } else {
-    await setWebConfiguration(preferences, noUpdateConfiguration);
-  }
 }
 
 const printHeader = (message) => {
